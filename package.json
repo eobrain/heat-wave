@@ -1,5 +1,5 @@
 {
-  "name": "heat-wave",
+  "name": "wetbulb",
   "version": "0.0.1",
   "description": "Find upcoming heat waves somewhere in the world",
   "main": "index.js",
