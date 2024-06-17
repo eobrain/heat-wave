@@ -1,7 +1,8 @@
 {
   "name": "wetbulb",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Find upcoming heat waves somewhere in the world",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
