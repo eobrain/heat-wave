@@ -1,6 +1,6 @@
 {
   "name": "wetbulb-app",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Find upcoming heat waves somewhere in the world",
   "type": "module",
   "main": "index.js",

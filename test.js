@@ -8,22 +8,51 @@ describe('worldwide', () => {
   it('runs', async () => {
     let count = 0
     const { worstPlace, worstResult } = await optimize(api, () => { ++count })
-    assert.ok(count > 10)
-    assert.ok(count < 30)
+    assert(count > 10)
+    assert(count < 30)
 
-    assert.ok(worstPlace.lon >= -180)
-    assert.ok(worstPlace.lon <= 180)
-    assert.ok(worstPlace.lat >= -90)
-    assert.ok(worstPlace.lat <= 90)
+    assert(worstPlace.lon >= -180)
+    assert(worstPlace.lon <= 180)
+    assert(worstPlace.lat >= -90)
+    assert(worstPlace.lat <= 90)
 
-    assert.ok(worstResult.date instanceof Date)
+    assert(worstResult.date instanceof Date)
   })
   it('currentPlace', () => {
     const result = currentPlace()
-    assert.ok(result.lon >= -180)
-    assert.ok(result.lon <= 180)
-    assert.ok(result.lat >= -90)
-    assert.ok(result.lat <= 90)
+    assert(result.lon >= -180)
+    assert(result.lon <= 180)
+    assert(result.lat >= -90)
+    assert(result.lat <= 90)
+  })
+})
+
+describe('usa', () => {
+  const minLat = 24.396308
+  const maxLat = 49.384358
+  const minLon = -125.0
+  const maxLon = -66.93457
+  it('runs', async () => {
+    let count = 0
+    const { worstPlace, worstResult } = await optimize(
+      api, () => { ++count },
+      { minLat, maxLat, minLon, maxLon })
+    assert(count > 5, '' + count)
+    assert(count < 20, '' + count)
+
+    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
+    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
+
+    assert(worstResult.date instanceof Date)
+  })
+  it('currentPlace', () => {
+    const result = currentPlace()
+    assert(result.lon >= minLon, JSON.stringify(result))
+    assert(result.lon <= maxLon, JSON.stringify(result))
+    assert(result.lat >= minLat, JSON.stringify(result))
+    assert(result.lat <= maxLat, JSON.stringify(result))
   })
 })
 

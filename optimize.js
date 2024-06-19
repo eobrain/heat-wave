@@ -2,7 +2,6 @@ import sleep from './sleep.js'
 import { get } from './cached.js'
 
 // const randomElement = array => array[Math.floor(Math.random() * array.length)]
-
 const KM_IN_LAT_DEG = 0.008
 const D = KM_IN_LAT_DEG
 const DSIN = D * Math.sqrt(3) / 2
@@ -16,35 +15,59 @@ const DELTAS = [
 // Corresponds to about 1 km at the equator
 const quantize = degree => Math.round(degree / KM_IN_LAT_DEG) * KM_IN_LAT_DEG
 
-const latMod = lon => lon > 90 ? lon - 180 : (lon < -90 ? lon + 180 : lon)
-const lonMod = lon => lon > 180 ? lon - 360 : (lon < -180 ? lon + 360 : lon)
+function latMod (lat, { minLat, maxLat }) {
+  const range = maxLat - minLat
+  while (lat > maxLat) {
+    lat -= range
+  }
+  while (lat < minLat) {
+    lat += range
+  }
+  return lat
+}
+function lonMod (lon, { minLon, maxLon }) {
+  const range = maxLon - minLon
+  while (lon > maxLon) {
+    lon -= range
+  }
+  while (lon < minLon) {
+    lon += range
+  }
+  return lon
+}
 
-const place = {}
-// let wetbulbAtPlace
-
-export const currentPlace = () => place
-
-let worstWetbulb = -10000
-let worstPlace = null
-
-const plus = (ll, delta, scale) => {
+const plus = (ll, delta, scale, bounds) => {
   const [dLat, dLon] = delta
   return {
-    lat: quantize(latMod(ll.lat + dLat * scale)),
-    lon: quantize(lonMod(ll.lon + dLon * scale))
+    lat: quantize(latMod(ll.lat + dLat * scale, bounds)),
+    lon: quantize(lonMod(ll.lon + dLon * scale, bounds))
   }
 }
 
-/* async function annealMove (annealT, scale, get, show) {
+const START_QUANTIZATION_DEG = 20
+const startQuantization = degree =>
+  START_QUANTIZATION_DEG * Math.round(degree / START_QUANTIZATION_DEG)
+
+class Optimizer {
+  constructor () {
+    this.place = {}
+    this.worstWetbulb = -10000
+    this.worstPlace = null
+    this.visited = new Set()
+  }
+
+  // let wetbulbAtPlace
+
+  /* async function annealMove (annealT, scale, get, show) {
   const latLon = plus(place, randomElement(DELTAS), scale)
 
   const result = await get(latLon)
   if (!result) {
     return false
   }
-  if (result.wetbulb > worstWetbulb) {
-    worstWetbulb = result.wetbulb
-    worstPlace = latLon
+  if (result.wetbulb > this.worstWetbulb) {
+    this.worstWetbulb = result.wetbulb
+    this.worstPlace = latLon
   }
   const dImprovement = result.wetbulb - wetbulbAtPlace
   const accept = Math.exp(dImprovement / annealT) > Math.random()
@@ -58,42 +81,41 @@ const plus = (ll, delta, scale) => {
   return false
 } */
 
-const visited = new Set()
+  async tabuMove (scale, api, show, bounds) {
+    let highestResult = { wetbulb: -10000 }
+    let highestPlace
 
-async function tabuMove (scale, api, show) {
-  let highestResult = { wetbulb: -10000 }
-  let highestPlace
+    for (const delta of DELTAS) {
+      const latLon = plus(this.place, delta, scale, bounds)
+      if (this.visited.has(JSON.stringify(latLon))) {
+        continue
+      }
+      const result = await get(api, latLon)
+      if (!result) {
+        continue
+      }
+      if (result.wetbulb > highestResult.wetbulb) {
+        highestResult = result
+        highestPlace = latLon
+      }
+    }
+    if (!highestPlace) {
+      return false
+    }
+    if (highestResult.wetbulb > this.worstWetbulb) {
+      this.worstWetbulb = highestResult.wetbulb
+      this.worstPlace = highestPlace
+      console.log('this.tabuMove:', this.worstPlace)
+      await show(highestResult)
+    }
+    this.place.lat = highestPlace.lat
+    this.place.lon = highestPlace.lon
+    // wetbulbAtPlace = highestResult.wetbulb
+    this.visited.add(JSON.stringify(this.place))
+    return true
+  }
 
-  for (const delta of DELTAS) {
-    const latLon = plus(place, delta, scale)
-    if (visited.has(JSON.stringify(latLon))) {
-      continue
-    }
-    const result = await get(api, latLon)
-    if (!result) {
-      continue
-    }
-    if (result.wetbulb > highestResult.wetbulb) {
-      highestResult = result
-      highestPlace = latLon
-    }
-  }
-  if (!highestPlace) {
-    return false
-  }
-  if (highestResult.wetbulb > worstWetbulb) {
-    worstWetbulb = highestResult.wetbulb
-    worstPlace = highestPlace
-    await show(highestResult)
-  }
-  place.lat = highestPlace.lat
-  place.lon = highestPlace.lon
-  // wetbulbAtPlace = highestResult.wetbulb
-  visited.add(JSON.stringify(place))
-  return true
-}
-
-/* async function hillclimbMove (scale, get, show) {
+  /* async function hillclimbMove (scale, get, show) {
   let highestResult = { wetbulb: wetbulbAtPlace }
   let highestPlace = place
   let moved = false
@@ -113,9 +135,9 @@ async function tabuMove (scale, api, show) {
   if (!moved) {
     return false
   }
-  if (highestResult.wetbulb > worstWetbulb) {
-    worstWetbulb = highestResult.wetbulb
-    worstPlace = highestPlace
+  if (highestResult.wetbulb > this.worstWetbulb) {
+    this.worstWetbulb = highestResult.wetbulb
+    this.worstPlace = highestPlace
   }
   await show(highestResult)
   place.lat = highestPlace.lat
@@ -124,37 +146,36 @@ async function tabuMove (scale, api, show) {
   return true
 } */
 
-// const K = 10
-const START_QUANTIZATION_DEG = 20
-const startQuantization = degree =>
-  START_QUANTIZATION_DEG * Math.round(degree / START_QUANTIZATION_DEG)
+  // const K = 10
 
-async function randomStart (api, show) {
-  let result
-  while (!result) {
-    place.lat = startQuantization(Math.random() * 180 - 90)
-    place.lon = startQuantization(Math.random() * 360 - 180)
-    result = await get(api, place)
+  async randomStart (api, show, { minLat, maxLat, minLon, maxLon }) {
+    let result
+    while (!result) {
+      this.place.lat = startQuantization(Math.random() * (maxLat - minLat) + minLat)
+      this.place.lon = startQuantization(Math.random() * (maxLon - minLon) + minLon)
+      result = await get(api, this.place)
+    }
+    // wetbulbAtPlace = result.wetbulb
+    await show(result)
   }
-  // wetbulbAtPlace = result.wetbulb
-  await show(result)
-}
 
-async function moveToWorst (api, show) {
-  if (!worstPlace) {
-    await sleep(1000)
-    return
+  async moveToWorst (api, show) {
+    if (!this.worstPlace) {
+      console.warn('No worst place found')
+      await sleep(1000)
+      return
+    }
+    this.place.lat = this.worstPlace.lat
+    this.place.lon = this.worstPlace.lon
+    // wetbulbAtPlace = this.worstWetbulb
+    const worstResult = await get(api, this.worstPlace)
+    await show(worstResult)
+    console.log('this.moveToWorst:', this.worstPlace)
+    return { worstPlace: this.worstPlace, worstResult }
   }
-  place.lat = worstPlace.lat
-  place.lon = worstPlace.lon
-  // wetbulbAtPlace = worstWetbulb
-  const worstResult = await get(api, worstPlace)
-  await show(worstResult)
-  return { worstPlace, worstResult }
-}
 
-/* async function anneal (get, show) {
-  await randomStart(get, show)
+  /* async function anneal (get, show) {
+  await this.randomStart(get, show)
 
   for (let scale = 16384; scale >= 1; scale /= 2) {
     for (let annealT = 10; ; annealT *= 0.99) {
@@ -167,40 +188,55 @@ async function moveToWorst (api, show) {
         break
       }
     }
-    moveToWorst(get, show)
+    this.moveToWorst(get, show)
   }
 } */
 
-async function tabu (api, show) {
-  await randomStart(api, show)
-  let worst
-
-  for (let scale = 16384; scale >= 1; scale /= 8) {
-    for (let i = 0; i < 100; ++i) {
+  async tabu (api, show, bounds) {
+    await this.randomStart(api, show, bounds)
+    let worst
+    const initialScale = 16384 * Math.min(
+      (bounds.maxLat - bounds.minLat) / 180,
+      (bounds.maxLon - bounds.minLon) / 360
+    )
+    for (let scale = initialScale; scale >= 1; scale /= 8) {
+      for (let i = 0; i < 100; ++i) {
       // await sleep(1000)
-      if (!(await tabuMove(scale, api, show))) {
-        break
+        if (!(await this.tabuMove(scale, api, show, bounds))) {
+          break
+        }
       }
-    }
-    worst = moveToWorst(api, show)
+      worst = this.moveToWorst(api, show)
     // await sleep(10000)
+    }
+    return worst
   }
-  return worst
-}
 
-/* async function hillclimb (get, show) {
-  await randomStart(get, show)
+  /* async function hillclimb (get, show) {
+  await this.randomStart(get, show)
 
   for (let scale = 128; scale >= 1; scale /= 2) {
     while ((await hillclimbMove(scale, get, show))) {
       // await sleep(1000)
     }
-    moveToWorst(get, show)
+    this.moveToWorst(get, show)
     await sleep(10000)
   }
 } */
-
-export async function optimize (api, show) {
-  await tabu(api, show)
-  return await moveToWorst(api, show)
 }
+
+let optimizer
+
+export async function optimize (api, show, bounds) {
+  const { minLat, maxLat, minLon, maxLon } = bounds || {
+    minLat: -90,
+    maxLat: 90,
+    minLon: -180,
+    maxLon: 180
+  }
+  optimizer = new Optimizer()
+  await optimizer.tabu(api, show, { minLat, maxLat, minLon, maxLon })
+  return await optimizer.moveToWorst(api, show)
+}
+
+export const currentPlace = () => optimizer.place
