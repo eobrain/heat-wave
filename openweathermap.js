@@ -11,7 +11,7 @@ export default async (api, { lat, lon }) => {
   const { cod } = result
   const code = Number(cod)
   if (code !== 200) {
-    console.log('Error fetching weather data for ', { lat, lon }, result)
+    console.log('Error fetching weather data for ', { lat, lon }, cod, result.message)
     if (code === 429) { // Quota exceeded
       await sleep(10000)
     }

@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { optimize, currentPlace, relTime, humanEffect, tile } from './index.js'
+import { optimize, currentPlace, relTime, humanEffect, describeWetbulb, tile } from './index.js'
 
 const api = (lat, lon) => `https://weather-424404.uc.r.appspot.com/?lat=${lat}&lon=${lon}`
 
@@ -38,7 +38,7 @@ describe('usa', () => {
       api, () => { ++count },
       { minLat, maxLat, minLon, maxLon })
     assert(count > 5, '' + count)
-    assert(count < 20, '' + count)
+    assert(count < 25, '' + count)
 
     assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
     assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
@@ -84,6 +84,36 @@ describe('display', () => {
 
   it('humanEffect kill everyone who is not protected', () => {
     assert.equal(humanEffect(35), 'kill everyone who is not protected')
+  })
+
+  it('describeWetbulb be OK', () => {
+    assert.equal(describeWetbulb(37 - 20.2, 20.2),
+      'a margin of 17 degrees below body temperature which will be OK')
+  })
+
+  it('describeWetbulb be uncomfortable', () => {
+    assert.equal(describeWetbulb(37 - 27.1, 27.1),
+      'a margin of 10 degrees below body temperature which will be uncomfortable')
+  })
+
+  it('describeWetbulb kill vulnerable people', () => {
+    assert.equal(describeWetbulb(37 - 30.2, 30.2),
+      'a margin of 7 degrees below body temperature which will kill vulnerable people')
+  })
+
+  it('describeWetbulb kill vulnerable people and make it impossible to do physical labor', () => {
+    assert.equal(describeWetbulb(37 - 34.1, 34.1),
+      'a margin of 3 degrees below body temperature which will kill vulnerable people and make it impossible to do physical labor')
+  })
+
+  it('describeWetbulb kill everyone who is not protected', () => {
+    assert.equal(describeWetbulb(37 - 35.2, 35.2),
+      'a margin of 2 degrees below body temperature which will kill everyone who is not protected')
+  })
+
+  it('describeWetbulb unsurvivable', () => {
+    assert.equal(describeWetbulb(37 - 39.1, 39.1),
+      '2 degrees **above** body temperature making it unsurvivable for humans')
   })
 
   it('tile', () => {

@@ -23,6 +23,11 @@ export function humanEffect (wetbulb) {
   return 'kill everyone who is not protected'
 }
 
+export const describeWetbulb = (sweatability, wetbulb) =>
+  (sweatability >= 0)
+    ? `a margin of ${Math.round(sweatability)} degrees below body temperature which will ${humanEffect(wetbulb)}`
+    : `${Math.round(-sweatability)} degrees **above** body temperature making it unsurvivable for humans`
+
 const ZOOM = 6
 
 export function tile ({ lat, lon }) {
