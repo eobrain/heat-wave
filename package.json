@@ -1,6 +1,6 @@
 {
   "name": "wetbulb",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Find upcoming heat waves somewhere in the world",
   "type": "module",
   "main": "index.js",
@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/eobrain/heat-wave/issues"
   },
-  "homepage": "https://github.com/eobrain/heat-wave#readme"
+  "homepage": "https://github.com/eobrain/heat-wave#readme",
+  "dependencies": {
+    "is-sea": "^0.3.1",
+    "passprint": "^0.0.1"
+  }
 }

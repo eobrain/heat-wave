@@ -1,7 +1,14 @@
 import openweathermap from './openweathermap.js'
 import countryNames from './country-names.js'
+import isSea from 'is-sea'
+import { pp } from 'passprint'
+
+pp(isSea)
 
 const uncachedGet = async (api, location) => {
+  if (isSea(location.lat, location.lon)) {
+    return undefined
+  }
   const { name, country, date, weather, population, description, main } = await openweathermap(api, location)
 
   if (!name || population === 0) {

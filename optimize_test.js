@@ -27,6 +27,36 @@ describe('worldwide', () => {
   })
 })
 
+describe('ireland', () => {
+  const minLat = 51.6693012559
+  const maxLat = 55.1316222195
+  const minLon = -9.97708574059
+  const maxLon = -6.03298539878
+  it('runs', async () => {
+    let count = 0
+    const { worstPlace, worstResult } = await optimize(
+      api, () => { ++count },
+      { minLat, maxLat, minLon, maxLon })
+    assert(count > 5, '' + count)
+    assert(count < 25, '' + count)
+
+    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
+    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
+
+    assert(worstResult.date instanceof Date)
+  })
+  it('currentPlace', () => {
+    const result = currentPlace()
+    assert(result.lon >= minLon, JSON.stringify(result))
+    assert(result.lon <= maxLon, JSON.stringify(result))
+    assert(result.lat >= minLat, JSON.stringify(result))
+    assert(result.lat <= maxLat, JSON.stringify(result))
+  })
+})
+
+/*
 describe('usa', () => {
   const minLat = 24.396308
   const maxLat = 49.384358
@@ -55,6 +85,7 @@ describe('usa', () => {
     assert(result.lat <= maxLat, JSON.stringify(result))
   })
 })
+*/
 
 describe('display', () => {
   it('relTime about now', () => {
