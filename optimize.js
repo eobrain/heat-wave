@@ -1,6 +1,5 @@
 import sleep from './sleep.js'
 import { get } from './cached.js'
-import { pp } from 'passprint'
 
 // const randomElement = array => array[Math.floor(Math.random() * array.length)]
 const KM_IN_LAT_DEG = 0.008
@@ -16,7 +15,7 @@ const DELTAS = [
 // Corresponds to about 1 km at the equator
 const quantize = degree => Math.round(degree / KM_IN_LAT_DEG) * KM_IN_LAT_DEG
 
-function latMod(lat, { minLat, maxLat }) {
+function latMod (lat, { minLat, maxLat }) {
   const range = maxLat - minLat
   while (lat > maxLat) {
     lat -= range
@@ -26,7 +25,7 @@ function latMod(lat, { minLat, maxLat }) {
   }
   return lat
 }
-function lonMod(lon, { minLon, maxLon }) {
+function lonMod (lon, { minLon, maxLon }) {
   const range = maxLon - minLon
   while (lon > maxLon) {
     lon -= range
@@ -50,7 +49,7 @@ const startQuantization = degree =>
   START_QUANTIZATION_DEG * Math.round(degree / START_QUANTIZATION_DEG)
 
 class Optimizer {
-  constructor() {
+  constructor () {
     this.place = {}
     this.worstWetbulb = -10000
     this.worstPlace = null
@@ -82,7 +81,7 @@ class Optimizer {
   return false
 } */
 
-  async tabuMove(scale, api, show, bounds) {
+  async tabuMove (scale, api, show, bounds) {
     let highestResult = { wetbulb: -10000 }
     let highestPlace
 
@@ -106,7 +105,7 @@ class Optimizer {
     if (highestResult.wetbulb > this.worstWetbulb) {
       this.worstWetbulb = highestResult.wetbulb
       this.worstPlace = highestPlace
-      console.log('this.tabuMove:', this.worstPlace)
+      // console.log('this.tabuMove:', this.worstPlace)
       await show(highestResult)
     }
     this.place.lat = highestPlace.lat
@@ -149,13 +148,14 @@ class Optimizer {
 
   // const K = 10
 
-  async randomStart(api, show, { minLat, maxLat, minLon, maxLon }) {
+  async randomStart (api, show, { minLat, maxLat, minLon, maxLon }) {
     let result
     let count = 0
     const dLat = maxLat - minLat
     const dLon = maxLon - minLon
-    const quant = (dLat < 2 * START_QUANTIZATION_DEG || dLon < 2 * START_QUANTIZATION_DEG) ?
-      quantize : startQuantization
+    const quant = (dLat < 2 * START_QUANTIZATION_DEG || dLon < 2 * START_QUANTIZATION_DEG)
+      ? quantize
+      : startQuantization
     while (!result) {
       if (count++ > 100) {
         console.warn('Failed to find a random start')
@@ -164,13 +164,13 @@ class Optimizer {
       }
       this.place.lat = quant(Math.random() * dLat + minLat)
       this.place.lon = quant(Math.random() * dLon + minLon)
-      result = await get(api, pp(this.place))
+      result = await get(api, this.place)
     }
     // wetbulbAtPlace = result.wetbulb
     await show(result)
   }
 
-  async moveToWorst(api, show) {
+  async moveToWorst (api, show) {
     if (!this.worstPlace) {
       console.warn('No worst place found')
       await sleep(1000)
@@ -181,7 +181,7 @@ class Optimizer {
     // wetbulbAtPlace = this.worstWetbulb
     const worstResult = await get(api, this.worstPlace)
     await show(worstResult)
-    console.log('this.moveToWorst:', this.worstPlace)
+    // console.log('this.moveToWorst:', this.worstPlace)
     return { worstPlace: this.worstPlace, worstResult }
   }
 
@@ -203,7 +203,7 @@ class Optimizer {
   }
 } */
 
-  async tabu(api, show, bounds) {
+  async tabu (api, show, bounds) {
     await this.randomStart(api, show, bounds)
     let worst
     const initialScale = 16384 * Math.min(
@@ -238,7 +238,7 @@ class Optimizer {
 
 let optimizer
 
-export async function optimize(api, show, bounds) {
+export async function optimize (api, show, bounds) {
   const { minLat, maxLat, minLon, maxLon } = bounds || {
     minLat: -90,
     maxLat: 90,

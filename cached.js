@@ -1,9 +1,6 @@
 import openweathermap from './openweathermap.js'
 import countryNames from './country-names.js'
 import isSea from 'is-sea'
-import { pp } from 'passprint'
-
-pp(isSea)
 
 const uncachedGet = async (api, location) => {
   if (isSea(location.lat, location.lon)) {
@@ -39,7 +36,7 @@ let totalCount = 0
 
 export const get = async (api, location) => {
   if ((totalCount % 100) === 99) {
-    console.log(`hit rate ${Math.round(100 * hitCount / totalCount)}`)
+    console.log(`misses=${totalCount - hitCount}, hit rate ${Math.round(100 * hitCount / totalCount)}`)
   }
   const key = JSON.stringify(location)
   ++totalCount
