@@ -1,8 +1,12 @@
 import wetbulb from './wetbulb.js'
 import sleep from './sleep.js'
 
+const MAX_RPM = 50 // Below openweatehrmap.org's limit of 60 RPM
+const DELAY_MS = 60 * 1000 / MAX_RPM
+
 const cached = async (api, { lat, lon }) => {
   const result = await fetch(api(lat, lon))
+  await sleep(DELAY_MS)
   return await result.json()
 }
 
