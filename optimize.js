@@ -210,7 +210,7 @@ class Optimizer {
       (bounds.maxLat - bounds.minLat) / 180,
       (bounds.maxLon - bounds.minLon) / 360
     )
-    for (let scale = initialScale; scale >= 1; scale /= 8) {
+    for (let scale = initialScale; scale >= 1; scale /= 4) {
       for (let i = 0; i < 100; ++i) {
         // await sleep(1000)
         if (!(await this.tabuMove(scale, api, show, bounds))) {
