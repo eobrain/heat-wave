@@ -9,18 +9,18 @@ export const BODY_TEMP = 36.9
 
 export function humanEffect (wetbulb) {
   if (wetbulb < 21) {
-    return 'be OK'
+    return 'be OK 😃😎'
   }
   if (wetbulb < 28) {
-    return 'be uncomfortable'
+    return 'be uncomfortable ☹️💦'
   }
   if (wetbulb < 31) {
-    return 'kill vulnerable people'
+    return 'kill vulnerable people 🥵💀 #DangerousWetbulb'
   }
   if (wetbulb < 35) {
-    return 'kill vulnerable people and make it impossible to do physical labor'
+    return 'make activity impossible 💀🛌 #UnlivableWetbulb'
   }
-  return 'kill everyone who is not protected'
+  return 'kill anyone not protected 💀💀 #UnsurvivableWetbulb'
 }
 
 export const describeWetbulb = (sweatability, wetbulb) =>
