@@ -21,10 +21,10 @@ class Optimizer {
     let highestResult = { wetbulb: -10000 }
     let highestPlace
 
-    for (const neighborCode of this.h3.gridDisk(
-      this.place.cellCode,
-      distance
-    )) {
+    const rings = this.h3.gridDiskDistances(this.place.cellCode, distance)
+    const outerRing = rings[rings.length - 1]
+
+    for (const neighborCode of outerRing) {
       if (!hexDict[neighborCode]) {
         continue
       }
