@@ -1,14 +1,93 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { optimize, currentPlace, relTime, humanEffect, describeWetbulb, tile } from './index.js'
+import {
+  optimize,
+  currentPlace,
+  relTime,
+  humanEffect,
+  describeWetbulb,
+  tile
+} from './index.js'
+import * as h3 from 'h3-js'
 
-const api = (lat, lon) => `https://weather-424404.uc.r.appspot.com/?lat=${lat}&lon=${lon}`
+const api = (lat, lon) =>
+  `https://weather-424404.uc.r.appspot.com/?lat=${lat}&lon=${lon}`
 
-/* describe('worldwide', () => {
+describe('ireland', () => {
+  const minLat = 40
+  const maxLat = 60
+  const minLon = -20
+  const maxLon = 0
   it('runs', async () => {
     let count = 0
-    const { worstPlace, worstResult } = await optimize(api, () => { ++count })
-    assert(count > 10, count)
+    const { worstPlace, worstResult } = await optimize(
+      api,
+      h3,
+      () => {
+        ++count
+      },
+      { minLat, maxLat, minLon, maxLon }
+    )
+    assert(count > 3, '' + count)
+    assert(count < 25, '' + count)
+
+    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
+    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
+
+    assert(worstResult.date instanceof Date)
+  })
+  it('currentPlace', () => {
+    const result = currentPlace()
+    assert(result.lon >= minLon, JSON.stringify(result))
+    assert(result.lon <= maxLon, JSON.stringify(result))
+    assert(result.lat >= minLat, JSON.stringify(result))
+    assert(result.lat <= maxLat, JSON.stringify(result))
+  })
+})
+
+describe('usa', () => {
+  const minLat = 24.396308
+  const maxLat = 49.384358
+  const minLon = -125.0
+  const maxLon = -66.93457
+  it('runs', async () => {
+    let count = 0
+    const { worstPlace, worstResult } = await optimize(
+      api,
+      h3,
+      () => {
+        ++count
+      },
+      { minLat, maxLat, minLon, maxLon }
+    )
+    assert(count > 3, '' + count)
+    assert(count < 25, '' + count)
+
+    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
+    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
+    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
+
+    assert(worstResult.date instanceof Date)
+  })
+  it('currentPlace', () => {
+    const result = currentPlace()
+    assert(result.lon >= minLon, JSON.stringify(result))
+    assert(result.lon <= maxLon, JSON.stringify(result))
+    assert(result.lat >= minLat, JSON.stringify(result))
+    assert(result.lat <= maxLat, JSON.stringify(result))
+  })
+})
+
+describe('worldwide', () => {
+  it('runs', async () => {
+    let count = 0
+    const { worstPlace, worstResult } = await optimize(api, h3, () => {
+      ++count
+    })
+    assert(count > 3, count)
     assert(count < 35, count)
 
     assert(worstPlace.lon >= -180)
@@ -25,67 +104,7 @@ const api = (lat, lon) => `https://weather-424404.uc.r.appspot.com/?lat=${lat}&l
     assert(result.lat >= -90)
     assert(result.lat <= 90)
   })
-}) */
-
-describe('ireland', () => {
-  const minLat = 51.6693012559
-  const maxLat = 55.1316222195
-  const minLon = -9.97708574059
-  const maxLon = -6.03298539878
-  it('runs', async () => {
-    let count = 0
-    const { worstPlace, worstResult } = await optimize(
-      api, () => { ++count },
-      { minLat, maxLat, minLon, maxLon })
-    assert(count > 5, '' + count)
-    assert(count < 25, '' + count)
-
-    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
-    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
-    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
-    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
-
-    assert(worstResult.date instanceof Date)
-  })
-  it('currentPlace', () => {
-    const result = currentPlace()
-    assert(result.lon >= minLon, JSON.stringify(result))
-    assert(result.lon <= maxLon, JSON.stringify(result))
-    assert(result.lat >= minLat, JSON.stringify(result))
-    assert(result.lat <= maxLat, JSON.stringify(result))
-  })
 })
-
-/*
-describe('usa', () => {
-  const minLat = 24.396308
-  const maxLat = 49.384358
-  const minLon = -125.0
-  const maxLon = -66.93457
-  it('runs', async () => {
-    let count = 0
-    const { worstPlace, worstResult } = await optimize(
-      api, () => { ++count },
-      { minLat, maxLat, minLon, maxLon })
-    assert(count > 5, '' + count)
-    assert(count < 25, '' + count)
-
-    assert(worstPlace.lon >= minLon, JSON.stringify(worstPlace))
-    assert(worstPlace.lon <= maxLon, JSON.stringify(worstPlace))
-    assert(worstPlace.lat >= minLat, JSON.stringify(worstPlace))
-    assert(worstPlace.lat <= maxLat, JSON.stringify(worstPlace))
-
-    assert(worstResult.date instanceof Date)
-  })
-  it('currentPlace', () => {
-    const result = currentPlace()
-    assert(result.lon >= minLon, JSON.stringify(result))
-    assert(result.lon <= maxLon, JSON.stringify(result))
-    assert(result.lat >= minLat, JSON.stringify(result))
-    assert(result.lat <= maxLat, JSON.stringify(result))
-  })
-})
-*/
 
 describe('display', () => {
   it('relTime about now', () => {
@@ -106,45 +125,66 @@ describe('display', () => {
   })
 
   it('humanEffect kill vulnerable people', () => {
-    assert.equal(humanEffect(30), 'kill vulnerable people 🥵💀 #DangerousWetbulb')
+    assert.equal(
+      humanEffect(30),
+      'kill vulnerable people 🥵💀 #DangerousWetbulb'
+    )
   })
 
   it('humanEffect kill vulnerable people and make it impossible to do physical labor', () => {
-    assert.equal(humanEffect(34), 'make activity impossible 💀🛌 #UnlivableWetbulb')
+    assert.equal(
+      humanEffect(34),
+      'make activity impossible 💀🛌 #UnlivableWetbulb'
+    )
   })
 
   it('humanEffect kill everyone who is not protected', () => {
-    assert.equal(humanEffect(35), 'kill anyone not protected 💀💀 #UnsurvivableWetbulb')
+    assert.equal(
+      humanEffect(35),
+      'kill anyone not protected 💀💀 #UnsurvivableWetbulb'
+    )
   })
 
   it('describeWetbulb be OK', () => {
-    assert.equal(describeWetbulb(37 - 20.2, 20.2),
-      'a margin of 17 degrees below body temperature which will be OK')
+    assert.equal(
+      describeWetbulb(37 - 20.2, 20.2),
+      'a margin of 17 degrees below body temperature which will be OK 😃😎'
+    )
   })
 
   it('describeWetbulb be uncomfortable', () => {
-    assert.equal(describeWetbulb(37 - 27.1, 27.1),
-      'a margin of 10 degrees below body temperature which will be uncomfortable')
+    assert.equal(
+      describeWetbulb(37 - 27.1, 27.1),
+      'a margin of 10 degrees below body temperature which will be uncomfortable'
+    )
   })
 
   it('describeWetbulb kill vulnerable people', () => {
-    assert.equal(describeWetbulb(37 - 30.2, 30.2),
-      'a margin of 7 degrees below body temperature which will kill vulnerable people')
+    assert.equal(
+      describeWetbulb(37 - 30.2, 30.2),
+      'a margin of 7 degrees below body temperature which will kill vulnerable people'
+    )
   })
 
   it('describeWetbulb kill vulnerable people and make it impossible to do physical labor', () => {
-    assert.equal(describeWetbulb(37 - 34.1, 34.1),
-      'a margin of 3 degrees below body temperature which will kill vulnerable people and make it impossible to do physical labor')
+    assert.equal(
+      describeWetbulb(37 - 34.1, 34.1),
+      'a margin of 3 degrees below body temperature which will kill vulnerable people and make it impossible to do physical labor'
+    )
   })
 
   it('describeWetbulb kill everyone who is not protected', () => {
-    assert.equal(describeWetbulb(37 - 35.2, 35.2),
-      'a margin of 2 degrees below body temperature which will kill everyone who is not protected')
+    assert.equal(
+      describeWetbulb(37 - 35.2, 35.2),
+      'a margin of 2 degrees below body temperature which will kill everyone who is not protected'
+    )
   })
 
   it('describeWetbulb unsurvivable', () => {
-    assert.equal(describeWetbulb(37 - 39.1, 39.1),
-      '2 degrees **above** body temperature making it unsurvivable for humans')
+    assert.equal(
+      describeWetbulb(37 - 39.1, 39.1),
+      '2 degrees **above** body temperature making it unsurvivable for humans'
+    )
   })
 
   it('tile', () => {

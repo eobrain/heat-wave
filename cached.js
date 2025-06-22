@@ -1,9 +1,8 @@
 import openweathermap from './openweathermap.js'
 import countryNames from './country-names.js'
-import isSea from 'is-sea'
 
-const uncachedGet = async (api, location) => {
-  if (isSea(location.lat, location.lon)) {
+const uncachedGet = async (api, isOutOfBounds, location) => {
+  if (isOutOfBounds(location.lat, location.lon)) {
     return undefined
   }
   const { name, country, date, weather, population, description, main } = await openweathermap(api, location)
@@ -34,7 +33,7 @@ const cache = new Map()
 let hitCount = 0
 let totalCount = 0
 
-export const get = async (api, location) => {
+export const get = async (api, isOutOfBounds, location) => {
   if ((totalCount % 100) === 99) {
     console.log(`misses=${totalCount - hitCount}, hit rate ${Math.round(100 * hitCount / totalCount)}`)
   }
@@ -44,7 +43,7 @@ export const get = async (api, location) => {
     ++hitCount
     return cache.get(key)
   }
-  const result = await uncachedGet(api, location)
+  const result = await uncachedGet(api, isOutOfBounds, location)
   cache.set(key, result)
   return result
 }

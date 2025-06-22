@@ -1,5 +1,6 @@
 import sleep from './sleep.js'
 import { get } from './cached.js'
+import isSea from 'is-sea'
 
 // const randomElement = array => array[Math.floor(Math.random() * array.length)]
 const KM_IN_LAT_DEG = 0.008
@@ -90,7 +91,7 @@ class Optimizer {
       if (this.visited.has(JSON.stringify(latLon))) {
         continue
       }
-      const result = await get(api, latLon)
+      const result = await get(api, isSea, latLon)
       if (!result) {
         continue
       }
@@ -164,7 +165,7 @@ class Optimizer {
       }
       this.place.lat = quant(Math.random() * dLat + minLat)
       this.place.lon = quant(Math.random() * dLon + minLon)
-      result = await get(api, this.place)
+      result = await get(api, isSea, this.place)
     }
     // wetbulbAtPlace = result.wetbulb
     await show(result)
@@ -179,7 +180,7 @@ class Optimizer {
     this.place.lat = this.worstPlace.lat
     this.place.lon = this.worstPlace.lon
     // wetbulbAtPlace = this.worstWetbulb
-    const worstResult = await get(api, this.worstPlace)
+    const worstResult = await get(api, isSea, this.worstPlace)
     await show(worstResult)
     // console.log('this.moveToWorst:', this.worstPlace)
     return { worstPlace: this.worstPlace, worstResult }
