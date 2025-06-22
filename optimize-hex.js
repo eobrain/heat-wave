@@ -18,32 +18,33 @@ class Optimizer {
   }
 
   async tabuMove (distance, api, show) {
-    let highestResult = { wetbulb: -10000 }
-    let highestPlace
-
     const rings = this.h3.gridDiskDistances(this.place.cellCode, distance)
     const outerRing = rings[rings.length - 1]
 
-    for (const neighborCode of outerRing) {
-      if (!hexDict[neighborCode]) {
-        continue
-      }
-      const neighbor = hexDict[neighborCode]
-      if (this.visited.has(neighbor.cellCode)) {
-        continue
-      }
-      const result = await get(api, this.isOutOfBounds, neighbor)
-      if (!result) {
-        continue
-      }
-      if (result.wetbulb > highestResult.wetbulb) {
-        highestResult = result
-        highestPlace = neighbor
-      }
-    }
-    if (!highestPlace) {
+    const results = outerRing
+      .filter((code) => !!hexDict[code])
+      .map((code) => hexDict[code])
+      .filter((hex) => this.visited.has(hex.cellCode))
+      .map(async (hex) => ({
+        cellCode: hex.cellCode,
+        result: await get(api, this.isOutOfBounds, hex)
+      }))
+
+    if (!results.length === 0) {
       return false
     }
+
+    let highestResult = { wetbulb: -10000 }
+    let highestPlace
+    for (const rPromise of results) {
+      const r = await rPromise
+      const { result, cellCode } = r
+      if (result && result.wetbulb > highestResult.wetbulb) {
+        highestResult = result
+        highestPlace = hexDict[cellCode]
+      }
+    }
+
     if (highestResult.wetbulb > this.worstWetbulb) {
       this.worstWetbulb = highestResult.wetbulb
       this.worstPlace = highestPlace
@@ -105,6 +106,25 @@ class Optimizer {
     }
     return worst
   }
+
+  async bruteForce (api, show) {
+    const results = cellCodes
+      .map((code) => hexDict[code])
+      .map(async (hex) => ({
+        cellCode: hex.cellCode,
+        result: await get(api, this.isOutOfBounds, hex)
+      }))
+
+    let highestResult = { wetbulb: -10000 }
+    for (const rPromise of results) {
+      const r = await rPromise
+      const { result, cellCode } = r
+      if (result && result.wetbulb > highestResult.wetbulb) {
+        highestResult = result
+        this.worstPlace = hexDict[cellCode]
+      }
+    }
+  }
 }
 
 let optimizer
@@ -119,7 +139,7 @@ export async function optimize (api, h3, show, bounds) {
   const isOutOfBounds = (lat, lon) =>
     lat < minLat || lat > maxLat || lon < minLon || lon > maxLon
   optimizer = new Optimizer(h3, isOutOfBounds)
-  await optimizer.tabu(api, show)
+  await optimizer.bruteForce(api, show)
   return await optimizer.moveToWorst(api, show)
 }
 
