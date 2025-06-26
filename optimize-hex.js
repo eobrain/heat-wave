@@ -29,6 +29,7 @@ class Optimizer {
         cellCode: hex.cellCode,
         result: await get(api, this.isOutOfBounds, hex)
       }))
+    await sleep(1000)
 
     if (!results.length === 0) {
       return false
@@ -71,6 +72,7 @@ class Optimizer {
         cellCodes[Math.floor(Math.random() * cellCodes.length)]
       this.place = hexDict[randomCellCode]
       result = await get(api, this.isOutOfBounds, this.place)
+      await sleep(1000)
     }
     await show(result)
   }
@@ -86,6 +88,7 @@ class Optimizer {
     this.place.cellCode = this.worstPlace.cellCode
     // wetbulbAtPlace = this.worstWetbulb
     const worstResult = await get(api, this.isOutOfBounds, this.worstPlace)
+    await sleep(1000)
     await show(worstResult)
     // console.log('this.moveToWorst:', this.worstPlace)
     return { worstPlace: this.worstPlace, worstResult }
@@ -114,6 +117,7 @@ class Optimizer {
         cellCode: hex.cellCode,
         result: await get(api, this.isOutOfBounds, hex)
       }))
+    await sleep(1000)
 
     let highestResult = { wetbulb: -10000 }
     for (const rPromise of results) {
