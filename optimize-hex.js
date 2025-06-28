@@ -17,6 +17,47 @@ class Optimizer {
     this.visited = new Set()
   }
 
+  async hillclimbMove (distance, api, show) {
+    const rings = this.h3.gridDiskDistances(this.place.cellCode, distance)
+    const outerRing = rings[rings.length - 1]
+
+    const results = outerRing
+      .filter((code) => !!hexDict[code])
+      .map((code) => hexDict[code])
+      .map(async (hex) => ({
+        cellCode: hex.cellCode,
+        result: await get(api, this.isOutOfBounds, hex)
+      }))
+    await sleep(1000)
+
+    if (!results.length === 0) {
+      return false
+    }
+
+    let highestResult = { wetbulb: -10000 }
+    let highestPlace
+    for (const rPromise of results) {
+      const r = await rPromise
+      const { result, cellCode } = r
+      if (result && result.wetbulb > highestResult.wetbulb) {
+        highestResult = result
+        highestPlace = hexDict[cellCode]
+      }
+    }
+
+    const foundWorse = highestResult.wetbulb > this.worstWetbulb
+    if (foundWorse) {
+      this.worstWetbulb = highestResult.wetbulb
+      this.worstPlace = highestPlace
+      await show(highestResult)
+      this.place.lat = highestPlace.lat
+      this.place.lon = highestPlace.lon
+      this.place.cellCode = highestPlace.cellCode
+      // wetbulbAtPlace = highestResult.wetbulb
+    }
+    return foundWorse
+  }
+
   async tabuMove (distance, api, show) {
     const rings = this.h3.gridDiskDistances(this.place.cellCode, distance)
     const outerRing = rings[rings.length - 1]
@@ -110,6 +151,22 @@ class Optimizer {
     return worst
   }
 
+  async hillClimb (api, show) {
+    await this.randomStart(api, show)
+    for (let distance = 1; distance <= 2; ++distance) {
+      for (let i = 0; i < 100; ++i) {
+        // await sleep(1000)
+        if (await this.hillclimbMove(distance, api, show)) {
+          this.moveToWorst(api, show)
+        } else {
+          break
+        }
+      }
+      // await sleep(10000)
+    }
+    return this.moveToWorst(api, show)
+  }
+
   async bruteForce (api, show) {
     const results = cellCodes
       .map((code) => hexDict[code])
@@ -143,7 +200,7 @@ export async function optimize (api, h3, show, bounds) {
   const isOutOfBounds = (lat, lon) =>
     lat < minLat || lat > maxLat || lon < minLon || lon > maxLon
   optimizer = new Optimizer(h3, isOutOfBounds)
-  await optimizer.bruteForce(api, show)
+  await optimizer.hillClimb(api, show)
   return await optimizer.moveToWorst(api, show)
 }
 

@@ -23,6 +23,7 @@
   "dependencies": {
     "h3-js": "^4.2.1",
     "is-sea": "^0.3.1",
+    "openmeteo": "^1.2.0",
     "passprint": "^0.0.1"
   }
 }

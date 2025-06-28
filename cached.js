@@ -1,32 +1,10 @@
-import openweathermap from './openweathermap.js'
-import countryNames from './country-names.js'
+import openmeteo from './openmeteo.js'
 
 const uncachedGet = async (api, isOutOfBounds, location) => {
   if (isOutOfBounds(location.lat, location.lon)) {
     return undefined
   }
-  const { name, country, date, weather, population, description, main } = await openweathermap(api, location)
-
-  if (!name || population === 0) {
-    return undefined
-  }
-  // if (name.match(/^[0-9,.-]*$/)) {
-  //  return undefined
-  // }
-
-  const { temp, humidity, feels_like: feelsLike, wetbulb } = main
-
-  return {
-    name,
-    country: countryNames[country] || country,
-    date,
-    weather,
-    description,
-    temp,
-    humidity,
-    feelsLike,
-    wetbulb
-  }
+  return await openmeteo(api, location)
 }
 
 const cache = new Map()
